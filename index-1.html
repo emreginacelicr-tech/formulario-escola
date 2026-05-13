@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>90 Anos de Maurício de Sousa — Planejamento Anual</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:#FFF9E6;color:#1A1A2E}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const STORAGE_KEY = "respostas-mauricio-sousa-v1";
+
+const ATIVIDADES = [
+  "📚 Leitura de gibis / roda de leitura",
+  "✍️ Produção de histórias em quadrinhos pelos alunos",
+  "🎨 Artes visuais inspiradas nos personagens",
+  "🎭 Dramatização / teatro com personagens",
+  "🧩 Jogos pedagógicos temáticos",
+  "🖥️ Recursos digitais (vídeos, animações, HQ digital)",
+  "🔤 Alfabetização e letramento com gibis",
+  "🔢 Matemática com situações dos personagens",
+  "🌿 Projetos interdisciplinares",
+  "♿ Adaptação de material para alunos com deficiência",
+  "👨‍👩‍👧 Envolvimento das famílias",
+  "🎶 Música e expressão corporal",
+  "📰 Exposição / mostra pedagógica das produções",
+];
+const PERSONAGENS = [
+  "Mônica","Cebolinha","Magali","Cascão",
+  "Anjinho / Jeremias / Jotalhão","Chico Bento",
+  "Penadinho / Astronauta / outras séries",
+  "Variados ao longo do ano",
+];
+const MOMENTOS = [
+  "🌅 Acolhida / Roda inicial do dia",
+  "📖 Hora da leitura / Roda de história",
+  "📐 Aulas regulares",
+  "🎨 Artes / Ed. Física / Música",
+  "🌟 Sessões de AEE",
+  "🏫 Projetos interdisciplinares",
+  "🎉 Eventos e datas comemorativas",
+  "🏠 Atividades para casa / famílias",
+];
+const RECURSOS = [
+  "📚 Gibis / revistas em quadrinhos",
+  "🖨️ Impressões coloridas",
+  "🎨 Material de artes (tintas, papel, cola…)",
+  "🖥️ Computador / tablet para os alunos",
+  "📽️ Projetor / TV",
+  "🎧 Caixa de som",
+  "🧩 Jogos pedagógicos",
+  "✂️ Material para fantasias / adereços",
+  "♿ Recursos de CAA (pranchas, pictogramas)",
+  "🖐️ Material tátil / em relevo",
+  "🔊 Audiobook / versão sonora",
+  "📋 Ampliação de materiais (baixa visão)",
+];
+const ADAPTACOES = [
+  "🖼️ Pictogramas e recursos visuais (TEA/DI)",
+  "🔤 Adaptação de texto (fonte, contraste)",
+  "🖐️ Material em relevo / tátil",
+  "🤟 Libras / recursos bilíngues",
+  "📱 Aplicativos de CAA",
+  "⏱️ Adaptação de tempo e quantidade",
+  "🤝 Atividades em dupla / cooperativa",
+  "🧸 Objetos concretos e manipuláveis",
+  "🌈 Diversificação dos produtos finais",
+  "Ainda não defini — quero orientação da equipe pedagógica",
+];
+const APOIOS_PROF = [
+  "👩‍🏫 Professor(a) de AEE / Sala de Recursos",
+  "🤟 Intérprete de Libras",
+  "🤝 Agente de Apoio à Inclusão — AAI",
+  "🎨 Professor(a) de Artes",
+  "📚 Biblioteca / Professor readaptado",
+  "💻 Laboratório de Informática",
+  "🧑‍⚕️ Equipe de saúde / Fonoaudiólogo(a)",
+  "Não precisarei de apoio adicional",
+];
+const FORMACOES = [
+  "💬 Gibis na alfabetização",
+  "♿ Adaptação para alunos com deficiência",
+  "🤟 Libras e inclusão de alunos surdos",
+  "🎨 Oficina de criação de HQ com alunos",
+  "💻 Recursos tecnológicos e HQ digital",
+  "📚 Lista de referências e sugestões de atividades",
+  "🤝 Planejamento coletivo com outros professores",
+  "Não preciso de apoio adicional no momento",
+];
+
+const emptyForm = () => ({
+  nome:"", segmentos:[],
+  atividades:[], atividadesBimestres:{}, outraAtividade:"", personagens:[],
+  frequencia:"", momentos:[], sequencia:"",
+  recursos:[], outroRecurso:"", apoiosProfissionais:[],
+  paee:"", adaptacoes:[], necessidadeEspecifica:"",
+  confianca:"", formacoes:[], observacoes:"",
+});
+
+const BL="#1565C0",YL="#FFD600",RD="#C62828",GR="#2E7D32",OR="#E65100",PU="#6A1B9A";
+
+const css = `
+.hero{background:${BL};padding:34px 20px 26px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(255,214,0,.07) 0,rgba(255,214,0,.07) 2px,transparent 2px,transparent 14px)}
+.badge{display:inline-block;background:${YL};color:${BL};font-family:'Baloo 2',cursive;font-weight:800;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:3px 14px;border-radius:20px;margin-bottom:12px;position:relative}
+.hero h1{font-family:'Baloo 2',cursive;font-size:clamp(1.35rem,4vw,2.1rem);font-weight:800;line-height:1.2;position:relative}
+.hero h1 em{color:${YL};font-style:normal}
+.hero p{font-size:.86rem;opacity:.85;margin-top:6px;position:relative}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #E0E0E0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.tab{flex:1;padding:14px 6px;font-family:'Baloo 2',cursive;font-weight:700;font-size:.88rem;border:none;background:none;cursor:pointer;color:#5C5C7A;border-bottom:3px solid transparent;transition:all .2s}
+.tab.on{color:${BL};border-bottom-color:${BL};background:#F0F4FF}
+.wrap{max-width:720px;margin:0 auto;padding:22px 14px 60px}
+.sh{display:flex;align-items:center;gap:10px;margin:28px 0 8px}
+.sn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-weight:800;font-size:.95rem;color:#fff;flex-shrink:0}
+.sh h2{font-family:'Baloo 2',cursive;font-size:1.05rem;font-weight:800}
+.dv{height:3px;border-radius:2px;margin:0 0 14px}
+.card{background:#fff;border-radius:14px;border:1.5px solid #E8E8E8;padding:20px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.ql{font-family:'Baloo 2',cursive;font-size:1rem;font-weight:700;margin-bottom:6px;line-height:1.35}
+.ql .r{color:${RD};margin-left:2px}
+.hint{font-size:.81rem;color:#5C5C7A;background:#F7F7FB;border-left:3px solid ${YL};border-radius:0 8px 8px 0;padding:8px 12px;margin:8px 0 12px;line-height:1.6}
+.hint b{color:#1A1A2E}
+input[type=text],textarea,select{width:100%;border:1.5px solid #D0D0E0;border-radius:8px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:.9rem;color:#1A1A2E;outline:none;transition:border .2s;background:#fff}
+input[type=text]:focus,textarea:focus,select:focus{border-color:${BL}}
+textarea{min-height:70px;resize:vertical}
+.cg{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.ci{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border:1.5px solid #E0E0E0;border-radius:10px;cursor:pointer;transition:all .15s;font-size:.87rem;line-height:1.45;user-select:none}
+.ci:hover{background:#F5F8FF;border-color:#90CAF9}
+.ci.on{background:#EEF4FF;border-color:${BL}}
+.ci input{width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:${BL};cursor:pointer}
+.rg{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.ri{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #E0E0E0;border-radius:10px;cursor:pointer;font-size:.87rem;transition:all .15s;user-select:none}
+.ri:hover{background:#F5F8FF;border-color:#90CAF9}
+.ri.on{background:#EEF4FF;border-color:${BL}}
+.ri input{accent-color:${BL};flex-shrink:0;width:15px;height:15px;cursor:pointer}
+.stars{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.sb{width:46px;height:46px;border-radius:10px;border:2px solid #E0E0E0;font-family:'Baloo 2',cursive;font-weight:800;font-size:1.15rem;cursor:pointer;transition:all .15s;background:#fff;color:#1A1A2E}
+.sb.on{border-color:${BL};background:${BL};color:#fff}
+.pbar-wrap{margin-bottom:18px}
+.pbar-label{font-size:.76rem;font-weight:700;color:#5C5C7A;margin-bottom:3px}
+.pbar{height:6px;background:#E0E0E0;border-radius:3px}
+.pfill{height:100%;border-radius:3px;background:linear-gradient(90deg,${BL},#42A5F5);transition:width .4s}
+.err-box{background:#FFEBEE;border:1.5px solid #EF9A9A;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.84rem;color:${RD};font-weight:600}
+.info-box{background:#E3F2FD;border:1.5px solid #90CAF9;border-radius:12px;padding:13px 16px;font-size:.84rem;color:#1A237E;line-height:1.6;margin-bottom:18px}
+.btn-send{width:100%;padding:14px;background:${BL};color:#fff;border:none;border-radius:12px;font-family:'Baloo 2',cursive;font-weight:800;font-size:1.05rem;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn-send:hover{background:#1976D2}
+.ok-box{background:#E8F5E9;border:1.5px solid #81C784;border-radius:14px;padding:24px;text-align:center;margin:20px 0}
+.ok-box h3{font-family:'Baloo 2',cursive;font-weight:800;color:${GR};font-size:1.2rem;margin-bottom:6px}
+.ok-box p{font-size:.87rem;color:#2E7D32}
+.btn-new{background:#fff;border:2px solid ${BL};color:${BL};border-radius:10px;padding:10px 20px;font-family:'Baloo 2',cursive;font-weight:700;cursor:pointer;margin-top:14px;font-size:.9rem}
+.pt{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.pt h2{font-family:'Baloo 2',cursive;font-weight:800;font-size:1.1rem;color:${BL}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:18px}
+.stat{background:#fff;border-radius:12px;padding:13px;text-align:center;border:1.5px solid #E0E0E0}
+.stat .n{font-family:'Baloo 2',cursive;font-weight:800;font-size:1.7rem;color:${BL}}
+.stat .l{font-size:.72rem;color:#5C5C7A;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.filters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.rc{background:#fff;border-radius:14px;border:1.5px solid #E0E0E0;padding:16px;margin-bottom:11px}
+.rc-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.rc-name{font-family:'Baloo 2',cursive;font-weight:800;font-size:.98rem}
+.rc-date{font-size:.73rem;color:#5C5C7A;margin-top:2px}
+.tag{display:inline-block;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:8px;margin:2px}
+.tb{background:#E3F2FD;color:${BL}}
+.tg{background:#E8F5E9;color:${GR}}
+.to{background:#FFF3E0;color:${OR}}
+.tp{background:#F3E5F5;color:${PU}}
+.rf{margin-bottom:8px}
+.rf .rl{font-size:.72rem;font-weight:700;color:#5C5C7A;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.rf .rv{font-size:.85rem;color:#1A1A2E;line-height:1.5}
+.sep{height:1px;background:#F0F0F0;margin:10px 0}
+.acc-btn{width:100%;text-align:left;background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.83rem;font-weight:700;color:${BL};padding:6px 0;display:flex;align-items:center;gap:6px}
+.btn-del{background:none;border:1.5px solid #FFCDD2;color:${RD};border-radius:8px;padding:4px 11px;font-size:.76rem;font-weight:700;cursor:pointer;flex-shrink:0}
+.btn-del:hover{background:#FFEBEE}
+.empty{text-align:center;padding:48px 20px;color:#5C5C7A}
+.empty .ico{font-size:2.8rem;margin-bottom:10px}
+.top2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.top2 .card{margin:0}
+.tk{font-family:'Baloo 2',cursive;font-weight:800;font-size:.83rem;margin-bottom:8px}
+.tr{font-size:.76rem;color:#5C5C7A;margin-bottom:4px;display:flex;justify-content:space-between}
+.tr b{font-weight:700;color:#1A1A2E;margin-left:8px}
+.senha-box{max-width:360px;margin:60px auto;background:#fff;border-radius:16px;border:1.5px solid #E0E0E0;padding:32px 24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.senha-box h2{font-family:'Baloo 2',cursive;font-weight:800;font-size:1.15rem;color:${BL};margin-bottom:8px}
+.senha-box p{font-size:.85rem;color:#5C5C7A;margin-bottom:16px}
+.btn-senha{width:100%;padding:12px;background:${BL};color:#fff;border:none;border-radius:10px;font-family:'Baloo 2',cursive;font-weight:800;font-size:1rem;cursor:pointer;margin-top:8px}
+.aviso-painel{background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:12px;padding:12px 16px;font-size:.83rem;color:#E65100;margin-bottom:16px;line-height:1.6}
+@media(max-width:520px){.filters{grid-template-columns:1fr}.top2{grid-template-columns:1fr}.tabs .tab{font-size:.76rem;padding:12px 3px}}
+`;
+
+const GRADS = {
+  b:`linear-gradient(135deg,${BL},#42A5F5)`,
+  r:`linear-gradient(135deg,${RD},#EF5350)`,
+  g:`linear-gradient(135deg,${GR},#66BB6A)`,
+  o:`linear-gradient(135deg,${OR},#FFA726)`,
+  p:`linear-gradient(135deg,${PU},#CE93D8)`,
+  y:`linear-gradient(135deg,#F9A825,${YL})`,
+};
+
+function CL({items,val,onChange}){
+  const t=x=>onChange(val.includes(x)?val.filter(v=>v!==x):[...val,x]);
+  return <div className="cg">{items.map(x=>(
+    <label key={x} className={`ci${val.includes(x)?" on":""}`}>
+      <input type="checkbox" checked={val.includes(x)} onChange={()=>t(x)}/>{x}
+    </label>
+  ))}</div>;
+}
+function RG({items,val,onChange}){
+  return <div className="rg">{items.map(x=>(
+    <label key={x} className={`ri${val===x?" on":""}`}>
+      <input type="radio" checked={val===x} onChange={()=>onChange(x)}/>{x}
+    </label>
+  ))}</div>;
+}
+function SH({n,grad,title}){
+  return <>
+    <div className="sh"><div className="sn" style={{background:grad}}>{n}</div><h2>{title}</h2></div>
+    <div className="dv" style={{background:grad}}/>
+  </>;
+}
+function calcPct(f){
+  const c=[f.nome.trim(),f.segmentos.length,f.atividades.length,
+    f.personagens.length,f.frequencia,f.momentos.length,f.recursos.length,
+    f.paee,f.adaptacoes.length,f.confianca];
+  return Math.round(c.filter(Boolean).length/c.length*100);
+}
+
+function Formulario({onSave}){
+  const [f,setF]=useState(emptyForm());
+  const [sent,setSent]=useState(false);
+  const [err,setErr]=useState("");
+  const s=(k,v)=>setF(p=>({...p,[k]:v}));
+  const pct=calcPct(f);
+
+  const validate=()=>{
+    if(!f.nome.trim()) return "Informe seu nome completo.";
+    if(!f.segmentos.length) return "Selecione pelo menos um segmento de atuação.";
+    if(!f.atividades.length) return "Selecione pelo menos uma atividade.";
+    if(!f.personagens.length) return "Selecione pelo menos um personagem.";
+    if(!f.frequencia) return "Informe a frequência das atividades.";
+    if(!f.momentos.length) return "Selecione pelo menos um momento da rotina.";
+    if(!f.recursos.length) return "Selecione pelo menos um recurso necessário.";
+    if(!f.paee) return "Responda sobre alunos com deficiência em sua turma.";
+    if(!f.adaptacoes.length) return "Selecione pelo menos uma estratégia.";
+    if(!f.confianca) return "Informe seu nível de confiança (1 a 5).";
+    return "";
+  };
+
+  const submit=()=>{
+    const e=validate();
+    if(e){setErr(e);window.scrollTo(0,0);return;}
+    setErr("");
+    const entry={...f,id:Date.now(),data:new Date().toLocaleString("pt-BR")};
+    onSave(entry);
+    setSent(true);
+  };
+
+  if(sent) return(
+    <div className="wrap">
+      <div className="ok-box">
+        <div style={{fontSize:"3rem"}}>🎉</div>
+        <h3>Planejamento enviado com sucesso!</h3>
+        <p>Obrigado, <strong>{f.nome.split(" ")[0]}</strong>! Suas respostas foram salvas e já estão disponíveis para a equipe de orientação pedagógica.</p>
+        <button className="btn-new" onClick={()=>{setF(emptyForm());setSent(false);}}>Preencher novo formulário</button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div className="wrap">
+      <div className="info-box">
+        <strong>📋 Orientação Geral:</strong> Preencha com atenção. As respostas auxiliarão a equipe de orientação pedagógica a organizar recursos e apoios para o projeto anual. Campos com <span style={{color:RD}}>*</span> são obrigatórios.
+      </div>
+      <div className="pbar-wrap">
+        <div className="pbar-label">Preenchimento: {pct}%</div>
+        <div className="pbar"><div className="pfill" style={{width:`${pct}%`}}/></div>
+      </div>
+      {err&&<div className="err-box">⚠️ {err}</div>}
+
+      <SH n="1" grad={GRADS.b} title="Identificação do Professor"/>
+      <div className="card">
+        <div className="ql">Nome completo <span className="r">*</span></div>
+        <input type="text" value={f.nome} onChange={e=>s("nome",e.target.value)} placeholder="Digite seu nome completo..."/>
+      </div>
+      <div className="card">
+        <div className="ql">Em qual(is) segmento(s) você atua? <span className="r">*</span></div>
+        <div className="hint">Selecione todas as opções que se aplicam à sua realidade neste ano letivo.</div>
+        <CL items={["🧸 Educação Infantil (Creche e Pré-Escola)","📖 1.º Segmento do EF (1.º ao 5.º ano)","🌟 AEE / Sala de Recursos","💛 Classe Especial"]} val={f.segmentos} onChange={v=>s("segmentos",v)}/>
+      </div>
+
+      <SH n="2" grad={GRADS.r} title="Atividades Relacionadas ao Projeto"/>
+      <div className="card">
+        <div className="ql">Quais atividades você pretende desenvolver e em qual bimestre? <span className="r">*</span></div>
+        <div className="hint">💡 <b>Dica:</b> Selecione cada atividade e indique em qual(is) bimestre(s) ela será realizada. Um mesmo gibi pode gerar atividades diferentes para cada segmento! Para a EI: contação e dramatização. Para o EF1: produção textual e leitura. Para AEE/CE: sequência narrativa visual e CAA.</div>
+        {ATIVIDADES.map(atv=>(
+          <div key={atv} style={{border:"1.5px solid #E0E0E0",borderRadius:10,padding:"10px 12px",marginBottom:8,background:f.atividades.includes(atv)?"#EEF4FF":"#fff"}}>
+            <label className="ci" style={{border:"none",padding:0,marginBottom:f.atividades.includes(atv)?8:0}}>
+              <input type="checkbox" checked={f.atividades.includes(atv)}
+                onChange={()=>{
+                  const next=f.atividades.includes(atv)?f.atividades.filter(x=>x!==atv):[...f.atividades,atv];
+                  const bims={...f.atividadesBimestres};
+                  if(!next.includes(atv)) delete bims[atv];
+                  s("atividades",next);
+                  s("atividadesBimestres",bims);
+                }}/>{atv}
+            </label>
+            {f.atividades.includes(atv)&&(
+              <div style={{paddingLeft:26,marginTop:4}}>
+                <div style={{fontSize:".78rem",fontWeight:700,color:"#5C5C7A",marginBottom:4}}>📅 Em qual(is) bimestre(s) esta atividade será realizada?</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                  {["1.º Bimestre","2.º Bimestre","3.º Bimestre","4.º Bimestre"].map(bim=>{
+                    const sel=(f.atividadesBimestres[atv]||[]).includes(bim);
+                    return(
+                      <button key={bim} onClick={()=>{
+                        const atual=f.atividadesBimestres[atv]||[];
+                        const novos=sel?atual.filter(b=>b!==bim):[...atual,bim];
+                        s("atividadesBimestres",{...f.atividadesBimestres,[atv]:novos});
+                      }} style={{padding:"4px 10px",borderRadius:8,border:`1.5px solid ${sel?"#1565C0":"#D0D0E0"}`,background:sel?"#1565C0":"#fff",color:sel?"#fff":"#5C5C7A",fontSize:".76rem",fontWeight:700,cursor:"pointer"}}>
+                        {bim}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <div className="ql">Outra atividade não listada? Descreva brevemente:</div>
+        <textarea value={f.outraAtividade} onChange={e=>s("outraAtividade",e.target.value)} placeholder="Descreva aqui..."/>
+      </div>
+      <div className="card">
+        <div className="ql">Quais personagens serão o fio condutor? <span className="r">*</span></div>
+        <div className="hint">💡 <b>Mônica/Cebolinha</b> → convivência e letramento. <b>Magali</b> → alimentação e ciências. <b>Cascão</b> → higiene e sustentabilidade. <b>Anjinho, Jotalhão, Jeremias</b> → diversidade étnico-cultural.</div>
+        <CL items={PERSONAGENS} val={f.personagens} onChange={v=>s("personagens",v)}/>
+      </div>
+
+      <SH n="3" grad={GRADS.g} title="Quando as Atividades Serão Realizadas"/>
+      <div className="card">
+        <div className="ql">Com que frequência? <span className="r">*</span></div>
+        <div className="hint">💡 Atividades integradas a outras disciplinas também contam!</div>
+        <RG items={["Diariamente (projeto integrado à rotina)","2 a 3 vezes por semana","1 vez por semana","Quinzenalmente","Em momentos pontuais (datas, eventos, mostras)"]} val={f.frequencia} onChange={v=>s("frequencia",v)}/>
+      </div>
+      <div className="card">
+        <div className="ql">Em quais momentos da rotina? <span className="r">*</span></div>
+        <div className="hint">💡 <b>Para EI e CE/AEE:</b> A roda de leitura e a hora da história são ótimas oportunidades para inserir os gibis de forma lúdica, sem romper a rotina estruturada.</div>
+        <CL items={MOMENTOS} val={f.momentos} onChange={v=>s("momentos",v)}/>
+      </div>
+      <div className="card">
+        <div className="ql">Descreva brevemente sua sequência didática prevista:</div>
+        <div className="hint">💡 <b>Exemplo:</b> Semana 1 — roda de leitura. Semana 2 — produção de HQ. Semana 3 — valores e diversidade. Semana 4 — exposição das produções.</div>
+        <textarea value={f.sequencia} onChange={e=>s("sequencia",e.target.value)} placeholder="Descreva sua sequência aqui..."/>
+      </div>
+
+      <SH n="4" grad={GRADS.o} title="Recursos Necessários"/>
+      <div className="card">
+        <div className="ql">Quais recursos materiais você precisará? <span className="r">*</span></div>
+        <div className="hint">💡 Liste todos os recursos que ainda não possui. A equipe de orientação pedagógica poderá antecipar providências com a direção.</div>
+        <CL items={RECURSOS} val={f.recursos} onChange={v=>s("recursos",v)}/>
+      </div>
+      <div className="card">
+        <div className="ql">Outros materiais não listados acima:</div>
+        <textarea value={f.outroRecurso} onChange={e=>s("outroRecurso",e.target.value)} placeholder="Ex.: versão em Libras das histórias, aplicativo específico..."/>
+      </div>
+      <div className="card">
+        <div className="ql">Precisará de apoio de outros profissionais?</div>
+        <div className="hint">💡 O trabalho colaborativo é essencial nas turmas com alunos da educação especial.</div>
+        <CL items={APOIOS_PROF} val={f.apoiosProfissionais} onChange={v=>s("apoiosProfissionais",v)}/>
+      </div>
+
+      <SH n="5" grad={GRADS.p} title="Inclusão e Adaptações Pedagógicas"/>
+      <div className="card">
+        <div className="ql">Você possui estratégias para a realização das atividades dos alunos com deficiência da sua turma? <span className="r">*</span></div>
+        <RG items={["Sim, e já tenho adaptações previstas","Sim, mas ainda preciso pensar nas adaptações — gostaria de apoio","Não, mas quero tornar as atividades mais inclusivas","Não se aplica à minha turma"]} val={f.paee} onChange={v=>s("paee",v)}/>
+      </div>
+      <div className="card">
+        <div className="ql">Estratégias de adaptação e inclusão que pretende utilizar: <span className="r">*</span></div>
+        <div className="hint">💡 Para TEA: rotinas visuais com personagens. Para DI: sequenciamento de quadrinhos. Para deficiência visual: material tátil e descrições ricas.</div>
+        <CL items={ADAPTACOES} val={f.adaptacoes} onChange={v=>s("adaptacoes",v)}/>
+      </div>
+      <div className="card">
+        <div className="ql">Necessidade específica de algum aluno que gostaria de contemplar:</div>
+        <div className="hint">⚠️ Não é necessário identificar o aluno pelo nome — descreva apenas a necessidade pedagógica.</div>
+        <textarea value={f.necessidadeEspecifica} onChange={e=>s("necessidadeEspecifica",e.target.value)} placeholder="Ex.: aluno não-verbal que usa CAA e gostaria de criar pranchas com os personagens..."/>
+      </div>
+
+      <SH n="6" grad={GRADS.y} title="Expectativas e Apoios"/>
+      <div className="card">
+        <div className="ql">Nível de confiança para usar gibis como ferramenta pedagógica: <span className="r">*</span></div>
+        <div className="hint">1 = Ainda tenho muitas dúvidas &nbsp;|&nbsp; 5 = Me sinto totalmente preparado(a)</div>
+        <div className="stars">
+          {[1,2,3,4,5].map(n=>(
+            <button key={n} className={`sb${f.confianca===String(n)?" on":""}`} onClick={()=>s("confianca",String(n))}>{n}</button>
+          ))}
+        </div>
+      </div>
+      <div className="card">
+        <div className="ql">Que tipo de apoio ou formação deseja da equipe de orientação pedagógica?</div>
+        <CL items={FORMACOES} val={f.formacoes} onChange={v=>s("formacoes",v)}/>
+      </div>
+      <div className="card">
+        <div className="ql">Observações, sugestões ou ideias sobre o projeto:</div>
+        <div className="hint">💡 Compartilhe ideias criativas, experiências com sua turma ou qualquer sugestão para a equipe de orientação pedagógica.</div>
+        <textarea value={f.observacoes} onChange={e=>s("observacoes",e.target.value)} placeholder="Suas ideias são muito bem-vindas..." style={{minHeight:88}}/>
+      </div>
+      <button className="btn-send" onClick={submit}>📨 Enviar Planejamento</button>
+    </div>
+  );
+}
+
+function Painel({respostas,onDelete}){
+  const [busca,setBusca]=useState("");
+  const [fSeg,setFSeg]=useState("");
+  const [fBim,setFBim]=useState("");
+  const [open,setOpen]=useState(null);
+  const [auth,setAuth]=useState(false);
+  const [senha,setSenha]=useState("");
+  const [erroSenha,setErroSenha]=useState(false);
+
+  const SENHA="orientacao2025";
+
+  if(!auth) return(
+    <div className="wrap">
+      <div className="senha-box">
+        <div style={{fontSize:"2.5rem",marginBottom:10}}>🔒</div>
+        <h2>Acesso Restrito</h2>
+        <p>Esta área é exclusiva para a equipe de orientação pedagógica. Digite a senha para continuar.</p>
+        <input type="password" value={senha} onChange={e=>setSenha(e.target.value)}
+          onKeyDown={e=>e.key==="Enter"&&(senha===SENHA?setAuth(true):setErroSenha(true))}
+          placeholder="Digite a senha..." style={{marginBottom:4}}/>
+        {erroSenha&&<div style={{color:RD,fontSize:".8rem",marginTop:4}}>⚠️ Senha incorreta. Tente novamente.</div>}
+        <button className="btn-senha" onClick={()=>senha===SENHA?setAuth(true):setErroSenha(true)}>Entrar</button>
+        <div style={{fontSize:".75rem",color:"#9E9E9E",marginTop:14}}>Senha padrão: <b>orientacao2025</b><br/>Recomendamos alterar no código após publicar.</div>
+      </div>
+    </div>
+  );
+
+  const fil=respostas.filter(r=>
+    r.nome.toLowerCase().includes(busca.toLowerCase())&&
+    (fSeg?r.segmentos.some(s=>s.includes(fSeg)):true)&&
+    (fBim?r.bimestre===fBim:true)
+  );
+
+  const topAtiv=Object.entries(
+    respostas.flatMap(r=>r.atividades).reduce((a,x)=>({...a,[x]:(a[x]||0)+1}),{})
+  ).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  const topRec=Object.entries(
+    respostas.flatMap(r=>r.recursos).reduce((a,x)=>({...a,[x]:(a[x]||0)+1}),{})
+  ).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  const sc={ei:0,ef1:0,aei:0,ce:0};
+  respostas.forEach(r=>{
+    if(r.segmentos.some(s=>s.includes("Infantil"))) sc.ei++;
+    if(r.segmentos.some(s=>s.includes("Fundamental"))) sc.ef1++;
+    if(r.segmentos.some(s=>s.includes("AEE"))) sc.aei++;
+    if(r.segmentos.some(s=>s.includes("Especial"))) sc.ce++;
+  });
+
+  return(
+    <div className="wrap">
+      <div className="aviso-painel">
+        ⚠️ <b>Atenção:</b> As respostas ficam salvas no navegador de quem acessa esta aba. Para que todas as respostas dos professores fiquem centralizadas, acesse sempre o painel <b>no mesmo dispositivo e navegador</b> onde o link foi aberto originalmente — ou use um serviço de banco de dados externo (entre em contato para configurar).
+      </div>
+      <div className="pt">
+        <h2>📊 Painel de Orientação Pedagógica</h2>
+        <span style={{fontSize:".78rem",color:"#5C5C7A"}}>{respostas.length} resposta{respostas.length!==1?"s":""}</span>
+      </div>
+      <div className="stats">
+        <div className="stat"><div className="n">{respostas.length}</div><div className="l">Respostas</div></div>
+        <div className="stat"><div className="n" style={{color:OR}}>{sc.ei}</div><div className="l">Ed. Infantil</div></div>
+        <div className="stat"><div className="n" style={{color:BL}}>{sc.ef1}</div><div className="l">EF 1.º Seg.</div></div>
+        <div className="stat"><div className="n" style={{color:PU}}>{sc.aei}</div><div className="l">AEI</div></div>
+        <div className="stat"><div className="n" style={{color:GR}}>{sc.ce}</div><div className="l">Cl. Especial</div></div>
+      </div>
+      {respostas.length>0&&(
+        <div className="top2">
+          <div className="card">
+            <div className="tk" style={{color:BL}}>🏆 Atividades mais planejadas</div>
+            {topAtiv.map(([a,n])=><div key={a} className="tr"><span>{a.slice(0,32)}{a.length>32?"…":""}</span><b>{n}×</b></div>)}
+          </div>
+          <div className="card">
+            <div className="tk" style={{color:OR}}>📦 Recursos mais solicitados</div>
+            {topRec.map(([r,n])=><div key={r} className="tr"><span>{r.slice(0,32)}{r.length>32?"…":""}</span><b>{n}×</b></div>)}
+          </div>
+        </div>
+      )}
+      <div className="filters">
+        <input type="text" placeholder="🔍 Buscar por nome..." value={busca} onChange={e=>setBusca(e.target.value)}/>
+        <select value={fSeg} onChange={e=>setFSeg(e.target.value)}>
+          <option value="">Todos os segmentos</option>
+          <option value="Infantil">Ed. Infantil</option>
+          <option value="Fundamental">EF 1.º Seg.</option>
+          <option value="AEE">AEE</option>
+          <option value="Especial">Cl. Especial</option>
+        </select>
+        <select value={fBim} onChange={e=>setFBim(e.target.value)}>
+          <option value="">Todos os bimestres</option>
+          <option>1.º Bimestre</option>
+          <option>2.º Bimestre</option>
+          <option>3.º Bimestre</option>
+          <option>4.º Bimestre</option>
+        </select>
+      </div>
+      {fil.length===0?(
+        <div className="empty">
+          <div className="ico">{respostas.length===0?"📭":"🔍"}</div>
+          <p>{respostas.length===0?"Nenhum planejamento recebido ainda.":"Nenhuma resposta encontrada com os filtros."}</p>
+        </div>
+      ):fil.map(r=>(
+        <div key={r.id} className="rc">
+          <div className="rc-head">
+            <div>
+              <div className="rc-name">👤 {r.nome}</div>
+              <div className="rc-date">📅 {r.data} · {r.bimestre}</div>
+              <div style={{marginTop:4}}>
+                {r.segmentos.map(sg=><span key={sg} className="tag tb">{sg.includes("Infantil")?"🧸 EI":sg.includes("Fundamental")?"📖 EF1":sg.includes("AEE")?"🌟 AEE":"💛 CE"}</span>)}
+              </div>
+            </div>
+            <button className="btn-del" onClick={()=>onDelete(r.id)}>🗑 Excluir</button>
+          </div>
+          <div className="rf"><div className="rl">Atividades e bimestres</div><div className="rv">{r.atividades.map(a=><span key={a} className="tag tg">{a}{r.atividadesBimestres&&r.atividadesBimestres[a]&&r.atividadesBimestres[a].length>0?" ("+r.atividadesBimestres[a].map(b=>b.replace(".º Bimestre","°B")).join(", ")+")":""}</span>)}</div></div>
+          <div className="sep"/>
+          <div className="rf"><div className="rl">Personagens</div><div className="rv">{r.personagens.map(p=><span key={p} className="tag to">{p}</span>)}</div></div>
+          <div className="sep"/>
+          <div className="rf"><div className="rl">Frequência</div><div className="rv">{r.frequencia}</div></div>
+          <button className="acc-btn" onClick={()=>setOpen(open===r.id?null:r.id)}>
+            {open===r.id?"▲ Ocultar detalhes":"▼ Ver todos os detalhes"}
+          </button>
+          {open===r.id&&(
+            <div style={{marginTop:8}}>
+              <div className="rf"><div className="rl">Momentos da rotina</div><div className="rv">{r.momentos.map(m=><span key={m} className="tag tb">{m}</span>)}</div></div>
+              {r.sequencia&&<><div className="sep"/><div className="rf"><div className="rl">Sequência didática</div><div className="rv">{r.sequencia}</div></div></>}
+              <div className="sep"/>
+              <div className="rf"><div className="rl">Recursos necessários</div><div className="rv">{r.recursos.map(rc=><span key={rc} className="tag to">{rc}</span>)}</div></div>
+              {r.outroRecurso&&<><div className="sep"/><div className="rf"><div className="rl">Outros recursos</div><div className="rv">{r.outroRecurso}</div></div></>}
+              {r.apoiosProfissionais.length>0&&<><div className="sep"/><div className="rf"><div className="rl">Apoios profissionais</div><div className="rv">{r.apoiosProfissionais.map(a=><span key={a} className="tag tp">{a}</span>)}</div></div></>}
+              <div className="sep"/>
+              <div className="rf"><div className="rl">Estratégias para alunos com deficiência</div><div className="rv">{r.paee}</div></div>
+              <div className="sep"/>
+              <div className="rf"><div className="rl">Adaptações inclusivas</div><div className="rv">{r.adaptacoes.map(a=><span key={a} className="tag tp">{a}</span>)}</div></div>
+              {r.necessidadeEspecifica&&<><div className="sep"/><div className="rf"><div className="rl">Necessidade específica</div><div className="rv">{r.necessidadeEspecifica}</div></div></>}
+              <div className="sep"/>
+              <div className="rf"><div className="rl">Nível de confiança</div><div className="rv">{"⭐".repeat(Number(r.confianca))} ({r.confianca}/5)</div></div>
+              {r.formacoes.length>0&&<><div className="sep"/><div className="rf"><div className="rl">Formações desejadas</div><div className="rv">{r.formacoes.map(f=><span key={f} className="tag tg">{f}</span>)}</div></div></>}
+              {r.observacoes&&<><div className="sep"/><div className="rf"><div className="rl">Observações</div><div className="rv">{r.observacoes}</div></div></>}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function App(){
+  const [tab,setTab]=useState("form");
+  const [respostas,setRespostas]=useState([]);
+
+  useEffect(()=>{
+    try{
+      const salvo=localStorage.getItem(STORAGE_KEY);
+      if(salvo) setRespostas(JSON.parse(salvo));
+    }catch(_){}
+  },[]);
+
+  const save=(entry)=>{
+    const next=[entry,...respostas];
+    setRespostas(next);
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(next));}catch(_){}
+  };
+
+  const del=(id)=>{
+    const next=respostas.filter(r=>r.id!==id);
+    setRespostas(next);
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(next));}catch(_){}
+  };
+
+  return(
+    <>
+      <style>{css}</style>
+      <div className="hero">
+        <div className="badge">📚 Projeto Pedagógico Anual 2025</div>
+        <h1>90 Anos de <em>Maurício de Sousa</em><br/>Gibis como Ferramenta de Aprendizagem e Inclusão</h1>
+        <p>🏫 E. M. Regina Celi da Silva Cerdeira — Planejamento Anual</p>
+      </div>
+      <div className="tabs">
+        <button className={`tab${tab==="form"?" on":""}`} onClick={()=>setTab("form")}>📝 Formulário do Professor</button>
+        <button className={`tab${tab==="painel"?" on":""}`} onClick={()=>setTab("painel")}>📊 Painel de Orientação {respostas.length>0&&`(${respostas.length})`}</button>
+      </div>
+      {tab==="form"?<Formulario onSave={save}/>:<Painel respostas={respostas} onDelete={del}/>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

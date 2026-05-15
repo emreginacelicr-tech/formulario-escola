@@ -83,7 +83,7 @@ const APOIOS_PROF = [
   "🎨 Professor(a) de Artes",
   "📚 Biblioteca / Professor readaptado",
   "💻 Laboratório de Informática",
-  "🧑‍⚕️ Equipe de saúde / Fonoaudiólogo(a)",
+  "🏫 Monitor e Inspetoria",
   "Não precisarei de apoio adicional",
 ];
 const FORMACOES = [
@@ -437,7 +437,6 @@ function Painel({respostas,onDelete}){
           placeholder="Digite a senha..." style={{marginBottom:4}}/>
         {erroSenha&&<div style={{color:RD,fontSize:".8rem",marginTop:4}}>⚠️ Senha incorreta. Tente novamente.</div>}
         <button className="btn-senha" onClick={()=>senha===SENHA?setAuth(true):setErroSenha(true)}>Entrar</button>
-        <div style={{fontSize:".75rem",color:"#9E9E9E",marginTop:14}}>Senha padrão: <b>orientacao2025</b><br/>Recomendamos alterar no código após publicar.</div>
       </div>
     </div>
   );

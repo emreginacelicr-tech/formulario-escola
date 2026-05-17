@@ -7,6 +7,7 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -18,6 +19,11 @@ body{font-family:'Nunito',sans-serif;background:#FFF9E6;color:#1A1A2E}
 <script type="text/babel">
 const { useState, useEffect } = React;
 const STORAGE_KEY = "respostas-mauricio-sousa-v1";
+
+// ── Supabase ───────────────────────────────────────────────────
+const SUPA_URL = "https://gydjuhqxvifqnsgstoxn.supabase.co";
+const SUPA_KEY = "sb_publishable_smItcu-namOuZ1wSf5BVaA_mkwjsVaP";
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 const ATIVIDADES = [
   "📚 Leitura de gibis / roda de leitura",
@@ -561,25 +567,82 @@ function Painel({respostas,onDelete}){
 function App(){
   const [tab,setTab]=useState("form");
   const [respostas,setRespostas]=useState([]);
+  const [loading,setLoading]=useState(true);
 
-  useEffect(()=>{
+  const carregar=async()=>{
     try{
-      const salvo=localStorage.getItem(STORAGE_KEY);
-      if(salvo) setRespostas(JSON.parse(salvo));
+      const {data,error}=await supa.from("respostas").select("*").order("created_at",{ascending:false});
+      if(!error&&data){
+        setRespostas(data.map(r=>({
+          id:r.id,
+          data:r.data,
+          nome:r.nome,
+          segmentos:JSON.parse(r.segmentos||"[]"),
+          atividades:JSON.parse(r.atividades||"[]"),
+          atividadesBimestres:JSON.parse(r.atividades_bimestres||"{}"),
+          outraAtividade:r.outra_atividade||"",
+          personagens:JSON.parse(r.personagens||"[]"),
+          frequencia:r.frequencia||"",
+          momentos:JSON.parse(r.momentos||"[]"),
+          sequencia:r.sequencia||"",
+          recursos:JSON.parse(r.recursos||"[]"),
+          outroRecurso:r.outro_recurso||"",
+          apoiosProfissionais:JSON.parse(r.apoios_profissionais||"[]"),
+          paee:r.paee||"",
+          adaptacoes:JSON.parse(r.adaptacoes||"[]"),
+          necessidadeEspecifica:r.necessidade_especifica||"",
+          confianca:r.confianca||"",
+          formacoes:JSON.parse(r.formacoes||"[]"),
+          observacoes:r.observacoes||"",
+        })));
+      }
     }catch(_){}
-  },[]);
-
-  const save=(entry)=>{
-    const next=[entry,...respostas];
-    setRespostas(next);
-    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(next));}catch(_){}
+    setLoading(false);
   };
 
-  const del=(id)=>{
-    const next=respostas.filter(r=>r.id!==id);
-    setRespostas(next);
-    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(next));}catch(_){}
+  useEffect(()=>{ carregar(); },[]);
+
+  const save=async(entry)=>{
+    try{
+      const {data,error}=await supa.from("respostas").insert([{
+        data:entry.data,
+        nome:entry.nome,
+        segmentos:JSON.stringify(entry.segmentos),
+        atividades:JSON.stringify(entry.atividades),
+        atividades_bimestres:JSON.stringify(entry.atividadesBimestres||{}),
+        outra_atividade:entry.outraAtividade,
+        personagens:JSON.stringify(entry.personagens),
+        frequencia:entry.frequencia,
+        momentos:JSON.stringify(entry.momentos),
+        sequencia:entry.sequencia,
+        recursos:JSON.stringify(entry.recursos),
+        outro_recurso:entry.outroRecurso,
+        apoios_profissionais:JSON.stringify(entry.apoiosProfissionais),
+        paee:entry.paee,
+        adaptacoes:JSON.stringify(entry.adaptacoes),
+        necessidade_especifica:entry.necessidadeEspecifica,
+        confianca:entry.confianca,
+        formacoes:JSON.stringify(entry.formacoes),
+        observacoes:entry.observacoes,
+      }]).select();
+      if(!error&&data) setRespostas(p=>[{...entry,id:data[0].id},...p]);
+    }catch(_){
+      // fallback local
+      setRespostas(p=>[entry,...p]);
+    }
   };
+
+  const del=async(id)=>{
+    try{ await supa.from("respostas").delete().eq("id",id); }catch(_){}
+    setRespostas(p=>p.filter(r=>r.id!==id));
+  };
+
+  if(loading) return(
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100vh",fontFamily:"'Baloo 2',cursive",color:"#1565C0",gap:12}}>
+      <div style={{fontSize:"2.5rem"}}>📚</div>
+      <div style={{fontSize:"1rem",fontWeight:700}}>Carregando respostas...</div>
+    </div>
+  );
 
   return(
     <>
@@ -591,7 +654,7 @@ function App(){
       </div>
       <div className="tabs">
         <button className={`tab${tab==="form"?" on":""}`} onClick={()=>setTab("form")}>📝 Formulário do Professor</button>
-        <button className={`tab${tab==="painel"?" on":""}`} onClick={()=>setTab("painel")}>📊 Painel de Orientação {respostas.length>0&&`(${respostas.length})`}</button>
+        <button className={`tab${tab==="painel"?" on":""}`} onClick={()=>{setTab("painel");carregar();}}>📊 Painel de Orientação {respostas.length>0&&`(${respostas.length})`}</button>
       </div>
       {tab==="form"?<Formulario onSave={save}/>:<Painel respostas={respostas} onDelete={del}/>}
     </>

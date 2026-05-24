@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerar Relatório — Projeto Maurício de Sousa</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@9.6.1/build/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:#FFF9E6;color:#1A1A2E;min-height:100vh}
+.hero{background:#1565C0;padding:28px 20px 22px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(255,214,0,.07) 0,rgba(255,214,0,.07) 2px,transparent 2px,transparent 14px)}
+.badge{display:inline-block;background:#FFD600;color:#1565C0;font-family:'Baloo 2',cursive;font-weight:800;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:3px 14px;border-radius:20px;margin-bottom:10px;position:relative}
+.hero h1{font-family:'Baloo 2',cursive;font-size:clamp(1.2rem,3.5vw,1.9rem);font-weight:800;line-height:1.2;position:relative}
+.hero h1 em{color:#FFD600;font-style:normal}
+.hero p{font-size:.84rem;opacity:.85;margin-top:5px;position:relative}
+.wrap{max-width:680px;margin:0 auto;padding:24px 14px 60px}
+.card{background:#fff;border-radius:14px;border:1.5px solid #E8E8E8;padding:22px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.card h2{font-family:'Baloo 2',cursive;font-size:1.05rem;font-weight:800;color:#1565C0;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:#F0F4FF;border-radius:10px;padding:12px;text-align:center}
+.stat .n{font-family:'Baloo 2',cursive;font-weight:800;font-size:1.6rem;color:#1565C0}
+.stat .l{font-size:.72rem;color:#5C5C7A;font-weight:700;text-transform:uppercase}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:'Baloo 2',cursive;font-weight:800;font-size:1rem;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn-primary{background:#1565C0;color:#fff}
+.btn-primary:hover{background:#1976D2;transform:translateY(-1px)}
+.btn-primary:disabled{background:#BDBDBD;cursor:not-allowed;transform:none}
+.btn-secondary{background:#fff;border:2px solid #1565C0!important;color:#1565C0;border:none}
+.status{font-size:.85rem;padding:10px 14px;border-radius:10px;margin-top:10px;display:none}
+.status.show{display:block}
+.status.ok{background:#E8F5E9;color:#2E7D32;border:1.5px solid #81C784}
+.status.err{background:#FFEBEE;color:#C62828;border:1.5px solid #EF9A9A}
+.status.info{background:#E3F2FD;color:#1565C0;border:1.5px solid #90CAF9}
+.prof-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.prof-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#F7F7FB;border-radius:10px;font-size:.87rem}
+.prof-item .seg{display:flex;gap:4px;flex-wrap:wrap}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:7px}
+.tb{background:#E3F2FD;color:#1565C0}
+.tg{background:#E8F5E9;color:#2E7D32}
+.to{background:#FFF3E0;color:#E65100}
+.tp{background:#F3E5F5;color:#6A1B9A}
+.loading{text-align:center;padding:32px;color:#5C5C7A;font-size:.9rem}
+.progress{height:6px;background:#E0E0E0;border-radius:3px;margin:10px 0}
+.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1565C0,#42A5F5);transition:width .3s}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="badge">📚 Relatório — Projeto Pedagógico Anual 2026</div>
+  <h1>90 Anos de <em>Maurício de Sousa</em><br/>Compilação de Respostas</h1>
+  <p>🏫 E. M. Regina Celi da Silva Cerdeira</p>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <h2>📊 Resumo das Respostas</h2>
+    <div id="loading" class="loading">⏳ Carregando respostas do banco de dados...</div>
+    <div id="resumo" style="display:none">
+      <div class="stats" id="stats"></div>
+      <div class="prof-list" id="prof-list"></div>
+    </div>
+  </div>
+
+  <div class="card" id="card-gerar" style="display:none">
+    <h2>📄 Gerar Documento Word</h2>
+    <p style="font-size:.86rem;color:#5C5C7A;margin-bottom:12px;line-height:1.6">
+      Clique no botão abaixo para gerar um arquivo <strong>.docx</strong> com o relatório geral e as fichas individuais de cada professor. Abra no Word ou Google Docs para imprimir ou salvar como PDF.
+    </p>
+    <div class="progress" id="prog-wrap" style="display:none">
+      <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+    </div>
+    <div id="status-msg" class="status"></div>
+    <button class="btn btn-primary" id="btn-gerar" onclick="gerarDocumento()">
+      📥 Gerar Relatório + Fichas Individuais (.docx)
+    </button>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = "https://gydjuhqxvifqnsgstoxn.supabase.co";
+const SUPA_KEY = "sb_publishable_smItcu-namOuZ1wSf5BVaA_mkwjsVaP";
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let RESPOSTAS = [];
+
+function parse(v, fallback) {
+  try { return JSON.parse(v || (Array.isArray(fallback)?'[]':'{}')); }
+  catch(_){ return fallback; }
+}
+
+function segTag(seg) {
+  if(seg.includes('Infantil')) return '<span class="tag tb">🧸 EI</span>';
+  if(seg.includes('Fundamental')) return '<span class="tag tg">📖 EF1</span>';
+  if(seg.includes('AEE')) return '<span class="tag tp">🌟 AEE</span>';
+  return '<span class="tag to">💛 CE</span>';
+}
+
+async function carregar() {
+  try {
+    const {data, error} = await supa.from('respostas').select('*').order('created_at', {ascending:true});
+    if(error) throw error;
+    RESPOSTAS = (data||[]).map(r => ({
+      ...r,
+      segmentos: parse(r.segmentos, []),
+      atividades: parse(r.atividades, []),
+      atividadesBimestres: parse(r.atividades_bimestres, {}),
+      personagens: parse(r.personagens, []),
+      momentos: parse(r.momentos, []),
+      recursos: parse(r.recursos, []),
+      apoiosProfissionais: parse(r.apoios_profissionais, []),
+      adaptacoes: parse(r.adaptacoes, []),
+      formacoes: parse(r.formacoes, []),
+    }));
+    mostrarResumo();
+  } catch(e) {
+    document.getElementById('loading').innerHTML = '❌ Erro ao carregar: ' + e.message;
+  }
+}
+
+function mostrarResumo() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('resumo').style.display = 'block';
+  document.getElementById('card-gerar').style.display = 'block';
+
+  const sc = {ei:0, ef1:0, aee:0, ce:0};
+  RESPOSTAS.forEach(r => {
+    if(r.segmentos.some(s=>s.includes('Infantil'))) sc.ei++;
+    if(r.segmentos.some(s=>s.includes('Fundamental'))) sc.ef1++;
+    if(r.segmentos.some(s=>s.includes('AEE'))) sc.aee++;
+    if(r.segmentos.some(s=>s.includes('Especial'))) sc.ce++;
+  });
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="n">${RESPOSTAS.length}</div><div class="l">Respostas</div></div>
+    <div class="stat"><div class="n" style="color:#E65100">${sc.ei}</div><div class="l">Ed. Infantil</div></div>
+    <div class="stat"><div class="n" style="color:#1565C0">${sc.ef1}</div><div class="l">EF 1.º Seg.</div></div>
+    <div class="stat"><div class="n" style="color:#6A1B9A">${sc.aee}</div><div class="l">AEE</div></div>
+    <div class="stat"><div class="n" style="color:#2E7D32">${sc.ce}</div><div class="l">Cl. Especial</div></div>
+  `;
+
+  const lista = RESPOSTAS.map(r => `
+    <div class="prof-item">
+      <div>
+        <strong>${r.nome}</strong><br/>
+        <span style="font-size:.75rem;color:#9E9E9E">${r.data||''}</span>
+      </div>
+      <div class="seg">${r.segmentos.map(s=>segTag(s)).join('')}</div>
+    </div>
+  `).join('');
+  document.getElementById('prof-list').innerHTML = lista || '<p style="color:#9E9E9E;font-size:.85rem">Nenhuma resposta encontrada.</p>';
+}
+
+function setStatus(msg, tipo) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = 'status show ' + tipo;
+}
+
+function setProgress(pct) {
+  document.getElementById('prog-wrap').style.display = 'block';
+  document.getElementById('prog-fill').style.width = pct + '%';
+}
+
+async function gerarDocumento() {
+  if(!RESPOSTAS.length) { setStatus('Nenhuma resposta para gerar.','err'); return; }
+  const btn = document.getElementById('btn-gerar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Gerando documento...';
+  setStatus('Preparando o documento...','info');
+  setProgress(10);
+
+  const {
+    Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+    AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType,
+    VerticalAlign, PageBreak, LevelFormat, TableOfContents
+  } = docx;
+
+  const BL = '1565C0', YL = 'FFD600', GR = '2E7D32', OR = 'E65100', PU = '6A1B9A', RD = 'C62828';
+  const W = 9360;
+  const border = s => ({ style: BorderStyle.SINGLE, size: 1, color: s||'CCCCCC' });
+  const borders = c => ({ top:border(c), bottom:border(c), left:border(c), right:border(c) });
+  const cell = (text, w, opts={}) => new TableCell({
+    width:{size:w,type:WidthType.DXA},
+    borders: borders(opts.bc||'DDDDDD'),
+    shading: opts.fill ? {fill:opts.fill, type:ShadingType.CLEAR} : undefined,
+    margins:{top:80,bottom:80,left:120,right:120},
+    verticalAlign: VerticalAlign.CENTER,
+    children:[new Paragraph({
+      alignment: opts.align||AlignmentType.LEFT,
+      children:[new TextRun({text:String(text||'—'),bold:!!opts.bold,size:opts.size||20,color:opts.color||'000000',font:'Arial'})]
+    })]
+  });
+
+  const h = (text,level,color) => new Paragraph({
+    heading: level,
+    spacing:{before:240,after:120},
+    children:[new TextRun({text,bold:true,size:level===HeadingLevel.HEADING_1?36:28,color:color||BL,font:'Arial'})]
+  });
+  const p = (text,opts={}) => new Paragraph({
+    spacing:{before:80,after:80},
+    children:[new TextRun({text,size:opts.size||20,bold:!!opts.bold,color:opts.color||'333333',font:'Arial'})]
+  });
+  const sep = () => new Paragraph({
+    spacing:{before:160,after:160},
+    border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'E0E0E0',space:1}},
+    children:[new TextRun({text:'',font:'Arial'})]
+  });
+  const bullet = (text) => new Paragraph({
+    numbering:{reference:'bullets',level:0},
+    spacing:{before:40,after:40},
+    children:[new TextRun({text,size:20,color:'333333',font:'Arial'})]
+  });
+
+  // ── contar frequências ──────────────────────────────────────
+  const contarTop = (arr, n=5) => {
+    const m = {};
+    arr.forEach(x => { m[x]=(m[x]||0)+1; });
+    return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,n);
+  };
+  const todasAtiv = RESPOSTAS.flatMap(r=>r.atividades);
+  const todosRec  = RESPOSTAS.flatMap(r=>r.recursos);
+  const todosMom  = RESPOSTAS.flatMap(r=>r.momentos);
+  const todosAdap = RESPOSTAS.flatMap(r=>r.adaptacoes);
+  const todosApoio= RESPOSTAS.flatMap(r=>r.apoiosProfissionais);
+  const todosForm = RESPOSTAS.flatMap(r=>r.formacoes);
+
+  const sc = {ei:0,ef1:0,aee:0,ce:0};
+  RESPOSTAS.forEach(r=>{
+    if(r.segmentos.some(s=>s.includes('Infantil'))) sc.ei++;
+    if(r.segmentos.some(s=>s.includes('Fundamental'))) sc.ef1++;
+    if(r.segmentos.some(s=>s.includes('AEE'))) sc.aee++;
+    if(r.segmentos.some(s=>s.includes('Especial'))) sc.ce++;
+  });
+
+  setProgress(30);
+
+  // ── tabela de ranking ────────────────────────────────────────
+  const tabelaRanking = (titulo, dados, cor) => {
+    const rows = [
+      new TableRow({
+        children:[
+          cell(titulo, 7000, {fill:cor||BL,bold:true,color:'FFFFFF',bc:cor||BL,size:20}),
+          cell('Qtd',2360,{fill:cor||BL,bold:true,color:'FFFFFF',bc:cor||BL,align:AlignmentType.CENTER,size:20})
+        ]
+      }),
+      ...dados.map(([nome,qtd],i)=>new TableRow({
+        children:[
+          cell(nome.replace(/^[^\s]+\s/,''), 7000, {fill: i%2===0?'F7F7FB':'FFFFFF'}),
+          cell(qtd+'×', 2360, {fill:i%2===0?'F7F7FB':'FFFFFF',align:AlignmentType.CENTER,bold:true,color:cor||BL})
+        ]
+      }))
+    ];
+    return new Table({ width:{size:W,type:WidthType.DXA}, columnWidths:[7000,2360], rows });
+  };
+
+  // ── SEÇÃO 1: capa / cabeçalho ────────────────────────────────
+  const children = [];
+
+  children.push(new Paragraph({
+    alignment:AlignmentType.CENTER,
+    spacing:{before:480,after:120},
+    children:[new TextRun({text:'PROJETO PEDAGÓGICO ANUAL 2026',bold:true,size:40,color:BL,font:'Arial',allCaps:true})]
+  }));
+  children.push(new Paragraph({
+    alignment:AlignmentType.CENTER,
+    spacing:{before:80,after:80},
+    children:[new TextRun({text:'90 Anos de Maurício de Sousa',bold:true,size:36,color:'B8860B',font:'Arial'})]
+  }));
+  children.push(new Paragraph({
+    alignment:AlignmentType.CENTER,
+    spacing:{before:60,after:60},
+    children:[new TextRun({text:'Gibis como Ferramenta de Aprendizagem e Inclusão',bold:true,size:28,color:'555555',font:'Arial'})]
+  }));
+  children.push(new Paragraph({
+    alignment:AlignmentType.CENTER,
+    spacing:{before:200,after:40},
+    children:[new TextRun({text:'E. M. Regina Celi da Silva Cerdeira',size:24,color:'444444',font:'Arial'})]
+  }));
+  children.push(new Paragraph({
+    alignment:AlignmentType.CENTER,
+    spacing:{before:40,after:40},
+    children:[new TextRun({text:'Compilação de Planejamentos dos Professores',size:22,color:'777777',font:'Arial'})]
+  }));
+  const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  children.push(new Paragraph({
+    alignment:AlignmentType.CENTER,
+    spacing:{before:40,after:480},
+    children:[new TextRun({text:hoje,size:20,color:'999999',font:'Arial'})]
+  }));
+
+  // quebra de página
+  children.push(new Paragraph({children:[new TextRun({break:1})]}));
+
+  // ── SEÇÃO 2: RELATÓRIO GERAL ─────────────────────────────────
+  children.push(h('PARTE 1 — RELATÓRIO GERAL', HeadingLevel.HEADING_1, BL));
+  children.push(sep());
+
+  children.push(h('1.1 Participação por Segmento', HeadingLevel.HEADING_2, GR));
+  children.push(p(`Total de respostas recebidas: ${RESPOSTAS.length} professor(es)`, {bold:true}));
+  children.push(new Paragraph({spacing:{before:80,after:80},children:[new TextRun({text:'',font:'Arial'})]}));
+
+  const tabelaSegs = new Table({
+    width:{size:W,type:WidthType.DXA},
+    columnWidths:[3500,2400,3460],
+    rows:[
+      new TableRow({children:[
+        cell('Segmento',3500,{fill:GR,bold:true,color:'FFFFFF',bc:GR}),
+        cell('Respostas',2400,{fill:GR,bold:true,color:'FFFFFF',bc:GR,align:AlignmentType.CENTER}),
+        cell('Status',3460,{fill:GR,bold:true,color:'FFFFFF',bc:GR}),
+      ]}),
+      new TableRow({children:[
+        cell('🧸 Educação Infantil',3500,{fill:'FFF3E0'}),
+        cell(sc.ei,2400,{fill:'FFF3E0',align:AlignmentType.CENTER,bold:true,color:OR}),
+        cell(sc.ei>0?'✓ Participou':'✗ Não participou',3460,{fill:'FFF3E0',color:sc.ei>0?GR:RD}),
+      ]}),
+      new TableRow({children:[
+        cell('📖 1.º Segmento do EF',3500,{fill:'E3F2FD'}),
+        cell(sc.ef1,2400,{fill:'E3F2FD',align:AlignmentType.CENTER,bold:true,color:BL}),
+        cell(sc.ef1>0?'✓ Participou':'✗ Não participou',3460,{fill:'E3F2FD',color:sc.ef1>0?GR:RD}),
+      ]}),
+      new TableRow({children:[
+        cell('🌟 AEE / Sala de Recursos',3500,{fill:'F3E5F5'}),
+        cell(sc.aee,2400,{fill:'F3E5F5',align:AlignmentType.CENTER,bold:true,color:PU}),
+        cell(sc.aee>0?'✓ Participou':'✗ Não participou',3460,{fill:'F3E5F5',color:sc.aee>0?GR:RD}),
+      ]}),
+      new TableRow({children:[
+        cell('💛 Classe Especial',3500,{fill:'E8F5E9'}),
+        cell(sc.ce,2400,{fill:'E8F5E9',align:AlignmentType.CENTER,bold:true,color:GR}),
+        cell(sc.ce>0?'✓ Participou':'✗ Não participou',3460,{fill:'E8F5E9',color:sc.ce>0?GR:RD}),
+      ]}),
+    ]
+  });
+  children.push(tabelaSegs);
+  children.push(new Paragraph({spacing:{before:160,after:80},children:[new TextRun({text:'',font:'Arial'})]}));
+
+  setProgress(50);
+
+  children.push(h('1.2 Atividades Mais Planejadas', HeadingLevel.HEADING_2, BL));
+  children.push(tabelaRanking('Atividade', contarTop(todasAtiv,8), BL));
+  children.push(new Paragraph({spacing:{before:160,after:80},children:[new TextRun({text:'',font:'Arial'})]}));
+
+  children.push(h('1.3 Recursos Mais Solicitados', HeadingLevel.HEADING_2, OR));
+  children.push(tabelaRanking('Recurso', contarTop(todosRec,8), OR));
+  children.push(new Paragraph({spacing:{before:160,after:80},children:[new TextRun({text:'',font:'Arial'})]}));
+
+  children.push(h('1.4 Momentos da Rotina Mais Indicados', HeadingLevel.HEADING_2, GR));
+  children.push(tabelaRanking('Momento', contarTop(todosMom,6), GR));
+  children.push(new Paragraph({spacing:{before:160,after:80},children:[new TextRun({text:'',font:'Arial'})]}));
+
+  children.push(h('1.5 Estratégias Inclusivas Mais Planejadas', HeadingLevel.HEADING_2, PU));
+  children.push(tabelaRanking('Estratégia', contarTop(todosAdap,6), PU));
+  children.push(new Paragraph({spacing:{before:160,after:80},children:[new TextRun({text:'',font:'Arial'})]}));
+
+  children.push(h('1.6 Apoios Profissionais Solicitados', HeadingLevel.HEADING_2, OR));
+  children.push(tabelaRanking('Apoio', contarTop(todosApoio,6), OR));
+  children.push(new Paragraph({spacing:{before:160,after:80},children:[new TextRun({text:'',font:'Arial'})]}));
+
+  children.push(h('1.7 Formações Desejadas pela Equipe', HeadingLevel.HEADING_2, BL));
+  children.push(tabelaRanking('Formação', contarTop(todosForm,6), BL));
+
+  setProgress(65);
+
+  // ── SEÇÃO 3: FICHAS INDIVIDUAIS ──────────────────────────────
+  children.push(new Paragraph({children:[new TextRun({break:1})]}));
+  children.push(h('PARTE 2 — FICHAS INDIVIDUAIS DOS PROFESSORES', HeadingLevel.HEADING_1, BL));
+  children.push(sep());
+
+  RESPOSTAS.forEach((r, idx) => {
+    if(idx > 0) children.push(new Paragraph({children:[new TextRun({break:1})]}));
+
+    // cabeçalho da ficha
+    children.push(new Table({
+      width:{size:W,type:WidthType.DXA},
+      columnWidths:[W],
+      rows:[new TableRow({children:[
+        cell(`FICHA ${String(idx+1).padStart(2,'0')} — ${r.nome.toUpperCase()}`, W, {fill:BL,bold:true,color:'FFFFFF',bc:BL,size:24})
+      ]})]
+    }));
+
+    // dados básicos
+    const segStr = r.segmentos.map(s=>
+      s.includes('Infantil')?'Educação Infantil':
+      s.includes('Fundamental')?'EF 1.º Segmento':
+      s.includes('AEE')?'AEE / Sala de Recursos':'Classe Especial'
+    ).join(' | ');
+
+    children.push(new Table({
+      width:{size:W,type:WidthType.DXA},
+      columnWidths:[2400,6960],
+      rows:[
+        new TableRow({children:[cell('Segmento(s)',2400,{fill:'E3F2FD',bold:true,color:BL}), cell(segStr||'—',6960,{fill:'F7FBFF'})]}),
+        new TableRow({children:[cell('Preenchido em',2400,{fill:'E3F2FD',bold:true,color:BL}), cell(r.data||'—',6960,{fill:'F7FBFF'})]}),
+        new TableRow({children:[cell('Frequência',2400,{fill:'E3F2FD',bold:true,color:BL}), cell(r.frequencia||'—',6960,{fill:'F7FBFF'})]}),
+        new TableRow({children:[cell('Confiança',2400,{fill:'E3F2FD',bold:true,color:BL}), cell('⭐'.repeat(Number(r.confianca||0))+` (${r.confianca||'—'}/5)`,6960,{fill:'F7FBFF'})]}),
+      ]
+    }));
+    children.push(new Paragraph({spacing:{before:80,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+
+    // atividades e bimestres
+    children.push(h('Atividades Planejadas e Bimestres', HeadingLevel.HEADING_2, BL));
+    if(r.atividades.length) {
+      const bims = r.atividadesBimestres||{};
+      children.push(new Table({
+        width:{size:W,type:WidthType.DXA},
+        columnWidths:[5360,4000],
+        rows:[
+          new TableRow({children:[
+            cell('Atividade',5360,{fill:BL,bold:true,color:'FFFFFF',bc:BL}),
+            cell('Bimestre(s)',4000,{fill:BL,bold:true,color:'FFFFFF',bc:BL})
+          ]}),
+          ...r.atividades.map((a,i)=>new TableRow({children:[
+            cell(a.replace(/^[^\s]+\s/,''),5360,{fill:i%2===0?'F7F7FB':'FFFFFF'}),
+            cell((bims[a]||[]).map(b=>b.replace('.º Bimestre','°B')).join(', ')||'—',4000,{fill:i%2===0?'F7F7FB':'FFFFFF',color:BL,bold:!!(bims[a]&&bims[a].length)})
+          ]}))
+        ]
+      }));
+    } else { children.push(p('Nenhuma atividade informada.',{color:'999999'})); }
+
+    children.push(new Paragraph({spacing:{before:80,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+
+    // personagens
+    children.push(h('Personagens Escolhidos', HeadingLevel.HEADING_2, '8B4513'));
+    if(r.personagens.length) r.personagens.forEach(pg=>children.push(bullet(pg)));
+    else children.push(p('Não informado.',{color:'999999'}));
+    children.push(new Paragraph({spacing:{before:80,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+
+    // momentos
+    children.push(h('Momentos da Rotina', HeadingLevel.HEADING_2, GR));
+    if(r.momentos.length) r.momentos.forEach(m=>children.push(bullet(m)));
+    else children.push(p('Não informado.',{color:'999999'}));
+
+    if(r.sequencia) {
+      children.push(new Paragraph({spacing:{before:80,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+      children.push(h('Sequência Didática Prevista', HeadingLevel.HEADING_2, GR));
+      children.push(p(r.sequencia));
+    }
+    children.push(new Paragraph({spacing:{before:80,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+
+    // recursos
+    children.push(h('Recursos Necessários', HeadingLevel.HEADING_2, OR));
+    if(r.recursos.length) r.recursos.forEach(rc=>children.push(bullet(rc.replace(/^[^\s]+\s/,''))));
+    else children.push(p('Não informado.',{color:'999999'}));
+    if(r.outro_recurso) { children.push(p('Outros: '+r.outro_recurso,{color:'555555'})); }
+    children.push(new Paragraph({spacing:{before:80,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+
+    // apoios
+    if(r.apoiosProfissionais.length) {
+      children.push(h('Apoios Profissionais Necessários', HeadingLevel.HEADING_2, OR));
+      r.apoiosProfissionais.forEach(a=>children.push(bullet(a)));
+      children.push(new Paragraph({spacing:{before:80,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+    }
+
+    // inclusão
+    children.push(h('Inclusão e Adaptações', HeadingLevel.HEADING_2, PU));
+    children.push(p('Estratégias para alunos com deficiência: '+(r.paee||'—'), {bold:true}));
+    if(r.adaptacoes.length) r.adaptacoes.forEach(a=>children.push(bullet(a)));
+    if(r.necessidade_especifica) {
+      children.push(new Paragraph({spacing:{before:60,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+      children.push(p('Necessidade específica relatada:', {bold:true, color:PU}));
+      children.push(p(r.necessidade_especifica));
+    }
+    children.push(new Paragraph({spacing:{before:80,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+
+    // formações
+    if(r.formacoes.length) {
+      children.push(h('Formações Desejadas', HeadingLevel.HEADING_2, BL));
+      r.formacoes.forEach(f=>children.push(bullet(f)));
+      children.push(new Paragraph({spacing:{before:80,after:0},children:[new TextRun({text:'',font:'Arial'})]}));
+    }
+
+    // observações
+    if(r.observacoes) {
+      children.push(h('Observações e Sugestões', HeadingLevel.HEADING_2, '555555'));
+      children.push(p(r.observacoes));
+    }
+  });
+
+  setProgress(85);
+
+  const doc = new Document({
+    numbering:{config:[{reference:'bullets',levels:[{level:0,format:LevelFormat.BULLET,text:'•',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:720,hanging:360}}}}]}]},
+    styles:{
+      default:{document:{run:{font:'Arial',size:20}}},
+      paragraphStyles:[
+        {id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,
+          run:{size:36,bold:true,font:'Arial',color:BL},
+          paragraph:{spacing:{before:320,after:160},outlineLevel:0}},
+        {id:'Heading2',name:'Heading 2',basedOn:'Normal',next:'Normal',quickFormat:true,
+          run:{size:24,bold:true,font:'Arial',color:BL},
+          paragraph:{spacing:{before:200,after:100},outlineLevel:1}},
+      ]
+    },
+    sections:[{
+      properties:{page:{size:{width:11906,height:16838},margin:{top:1134,right:1134,bottom:1134,left:1134}}},
+      children
+    }]
+  });
+
+  setProgress(95);
+
+  const buffer = await Packer.toBlob(doc);
+  saveAs(buffer, 'Relatorio-Projeto-Mauricio-de-Sousa-2026.docx');
+  setProgress(100);
+  setStatus('✅ Documento gerado com sucesso! Verifique seus downloads.','ok');
+  btn.textContent = '📥 Gerar Relatório + Fichas Individuais (.docx)';
+  btn.disabled = false;
+}
+
+window.onload = carregar;
+</script>
+</body>
+</html>
